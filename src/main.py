@@ -28,6 +28,8 @@ from scipy.constants import m_e, m_p, c, e, hbar
 
 from threading import Thread
 
+import traceback   # for appropriate output of errors
+
 # own imports
 from dla_TM01 import CylindricDLA, plotDispersion
 from EBFields import EBField, plotFieldsRadially
@@ -38,10 +40,8 @@ from beam_old import set_axes_equal, plotEDistribution, plotzPz, plotxPx, plotEl
 class Model: #(threading.Thread): 
     def __init__(self):
 #        threading.Thread.__init__(self) 
-        
-        k=1.9e4
         self.dlaTHZ = CylindricDLA(200e-6, 470e-6, 11.67)
-        N_p= 1000
+        k=1.9e4
         omega = self.dlaTHZ.dispersion(k)
         self.fields = EBField(self.dlaTHZ, E_0= 1e8, k= k, phi=0.35)
         # phase velocity specified in units of c as well as omega
@@ -50,20 +50,11 @@ class Model: #(threading.Thread):
         print("Phase velocity in units of c: v_p= {0}".format(v_p))
         beta= v_p               # synchronicity assumed!!!
         mp = m_p*c**2/e         # in units of eV
+
+#        self.beam = Beam(mp, beta, updateStatus)
         self.beam = Beam(mp, beta)
+        N_p= 1000        
         p0= self.beam.get_p0()
-#        beta* self.beam.gamma0() * mp
-        #create the particle distribution. all quantities are centered at 0 with a
-        # spread of 0.1 except for the longitudinal momentum p_z
-        # number of particles
-        
-        # TODO: size in phase space
-        
-#        self.beam.createGaussian(N_p, 
-#                        0.1*self.dlaTHZ.a, 0.1*self.dlaTHZ.a,
-#                        0.1*self.dlaTHZ.a, 0.1*self.dlaTHZ.a,
-#                        0.1*self.dlaTHZ.a, 0.1,
-#                        0, 0, 0, 0, 0, p0 )
         s_tr= 0.1*self.dlaTHZ.a
         s_z = 0.1*self.dlaTHZ.a
         s_z = 1e-6
@@ -76,6 +67,23 @@ class Model: #(threading.Thread):
                         0, 0, 0, 0, 0, p0 )  
         # used for plotting the evolution of the transverse ellipse parameters
         self.ellipseEvolution = np.zeros((5,1))
+        
+        self.simulationStatus = 0
+
+
+        
+        #        beta* self.beam.gamma0() * mp
+        #create the particle distribution. all quantities are centered at 0 with a
+        # spread of 0.1 except for the longitudinal momentum p_z
+        # number of particles
+        
+        # TODO: size in phase space
+        
+#        self.beam.createGaussian(N_p, 
+#                        0.1*self.dlaTHZ.a, 0.1*self.dlaTHZ.a,
+#                        0.1*self.dlaTHZ.a, 0.1*self.dlaTHZ.a,
+#                        0.1*self.dlaTHZ.a, 0.1,
+#                        0, 0, 0, 0, 0, p0 )
         
         '''        
         s_tr= 0.1*self.dlaTHZ.a
@@ -90,6 +98,8 @@ class Model: #(threading.Thread):
                         0, 0, 0, 0, 0, p0 )
         '''
         
+    def updateStatus(self):
+        pass
         
     def set_dla(self, a, b, epsR):
        self.dlaTHZ.a = a
@@ -200,8 +210,8 @@ class MyMplCanvas(FigureCanvas):
         ax.set_title("Dispersion")
         k= np.linspace(10, field.k*1.2 , 200)
         plotDispersion( dla, k, axes=ax, label=r"$\omega(k)$",
-                       incFreeSpace=True, incFullLoading=True)
-        self.lineDlaDispersion = ax.lines[0]
+                       incFreeSpace=True)
+        self.lineDlaDispersion = ax.lines[1]
         self.lineOpPoint, = ax.plot( field.k, field.omega/(2*np.pi*1e9), "ro")
         self.lineBeamDispersion, = ax.plot( k, beam.b0 * c * k /(2*np.pi*1e9), label=r"$\omega=\beta c k$" )
         ax.legend(loc=0)        
@@ -319,11 +329,14 @@ class UIFrame(wx.Frame):
         self.btn_run = wx.Button(panel, label="Run")
         self.btn_animate = wx.Button(panel, label="3d Simulation")        
         self.btn_reset = wx.Button(panel, label="Reset")        
+        spacersize = 20        
+        vboxLeft.AddSpacer(20)        
         vboxLeft.Add(self.btn, flag= wx.CENTER, border = 5)
         vboxLeft.Add(self.btn_run, flag= wx.CENTER, border = 5)
         vboxLeft.Add(self.btn_reset, flag= wx.CENTER, border = 5)
         vboxLeft.AddSpacer(20)
         vboxLeft.Add(self.btn_animate, flag=wx.CENTER, border = 5 )
+        self.btn_animate.Disable()
         vboxLeft.AddSpacer(20)        
         vboxLeft.Add(wx.StaticLine(panel), flag= wx.EXPAND, border= 5)        
         vboxLeft.AddSpacer(20)
@@ -402,7 +415,7 @@ class UIFrame(wx.Frame):
         self.txtCtrl_omega = wx.TextCtrl(panel, style=wx.TE_READONLY)
         self.txtCtrl_phVelocity = wx.TextCtrl(panel,  style=wx.TE_READONLY)
         self.txtCtrl_wavevector = wx.TextCtrl(panel,  style=wx.TE_READONLY)
-#        self.txtCtrlEnergySpread = wx.TextCtrl(panel,  style=wx.TE_READONLY)
+        self.txtCtrlEnergySpread = wx.TextCtrl(panel,  style=wx.TE_READONLY)
         grid.AddMany(
             [ (wx.StaticText(panel, label= "beta"), 0, 0, 5),
              (self.txtCtrl_beta),
@@ -411,26 +424,33 @@ class UIFrame(wx.Frame):
              (wx.StaticText(panel, label= "phase velocity [c]"), 0, 0, 5),
              (self.txtCtrl_phVelocity),
              (wx.StaticText(panel, label= "wave number [1/m]"), 0, 0, 5),
-             (self.txtCtrl_wavevector)
+             (self.txtCtrl_wavevector),
+             (wx.StaticText(panel, label= "energy width initial [eV]"), 0, 0, 5),
+             (self.txtCtrlEnergySpread)
              ])
              
     def initResultForm(self,panel, grid):
         self.txtCtrl_energy_change = wx.TextCtrl(panel, style=wx.TE_READONLY)
         self.txtCtrl_loss = wx.TextCtrl(panel,  style=wx.TE_READONLY)
-        self.txtCtrlEnergySpread = wx.TextCtrl(panel,  style=wx.TE_READONLY)
-        self.txtCtrl_Beta_z  = wx.TextCtrl(panel,  style=wx.TE_READONLY)
+        self.txtCtrlEnergySpread_final = wx.TextCtrl(panel,  style=wx.TE_READONLY)
+#        self.txtCtrl_Beta_z  = wx.TextCtrl(panel,  style=wx.TE_READONLY)
         
         grid.AddMany(
             [ (wx.StaticText(panel, label= "energy change [eV]"), 0, 0, 5),
              (self.txtCtrl_energy_change),
+             (wx.StaticText(panel, label= "energy width final [eV]"), 0, 0, 5),
+             (self.txtCtrlEnergySpread_final),
              (wx.StaticText(panel, label= "particle loss"), 0, 0, 5),
-             (self.txtCtrl_loss),
-             (wx.StaticText(panel, label= "energy width [eV]"), 0, 0, 5),
-             (self.txtCtrlEnergySpread),
-             (wx.StaticText(panel, label= "Twiss beta x"), 0, 0, 5),
-             (self.txtCtrl_Beta_z)
+             (self.txtCtrl_loss)
+#             ,
+#             (wx.StaticText(panel, label= "Twiss beta x"), 0, 0, 5),
+#             (self.txtCtrl_Beta_z)
              ])
-        
+             
+    def showMsgBox(self, text):
+        msgbox = wx.MessageDialog(None, text, 'Info', wx.OK)
+        msgbox.ShowModal()
+        msgbox.Destroy()
 
 class Controller:
     def __init__(self):
@@ -449,6 +469,8 @@ class Controller:
         pub.subscribe(self.fieldChanged, "MSG: Field changed")        
         pub.subscribe(self.beamChanged, "MSG: Beam Changed")
         pub.subscribe(self.beamAccelerated,"MSG: Acceleration done")
+        
+#        pub.subscribe( self. )
        
         ### View        
         self.frame = UIFrame()
@@ -500,7 +522,10 @@ class Controller:
         ## just done to trigger EVT_TEXT event to calculate beta
 #        txtCtrls['E_kin'].SetValue( txtCtrls['E_kin'].GetValue())  
 #        self.txt_changed[3]= False
-        self.txt_changed= np.zeros(len(self.short_options),dtype=bool)
+                
+#        self.txt_changed= np.zeros(len(self.short_options),dtype=bool)
+        self.txt_changed = [False]*len(self.short_options)
+        
 #        txtCtrls['lam'].SetValue( txtCtrls['E_kin'].GetValue())  
 #        self.txt_changed[11]= False
         
@@ -554,9 +579,9 @@ class Controller:
         E_after, E_std_after = self.model.beam.getMeanEnergyKin(boolStd=True) 
         delta_E =  E_after - self.model.beam.get_Ekin0()                    
         N_loss=self.model.beam.removeByMaxTransverse(self.model.dlaTHZ.a)
-        self.frame.txtCtrl_energy_change.SetValue( str(delta_E) )             
+        self.frame.txtCtrl_energy_change.SetValue( "{0:2.3e}".format(delta_E) )             
         self.frame.txtCtrl_loss.SetValue(str(N_loss))
-        self.frame.txtCtrlEnergySpread.SetValue(str(E_std_after))
+        self.frame.txtCtrlEnergySpread_final.SetValue("{0:2.3e}".format(E_std_after))
 #        self.frame.txtCtrl_Beta_z =         
        
     # Event Handler-------------------------------
@@ -569,28 +594,37 @@ class Controller:
         params= self.getFormParams()
         m= self.model
 #        print(self.txt_changed)
-        if ( self.txt_changed[:3].any() ):
-#            print("DLA changed")
-            m.set_dla(params['a'], params['b'], params['epsR'])
-            m.set_field(params['lam'], params['E_0'], params['phi'])
-            pub.sendMessage("MSG: DLA changed")
-            pub.sendMessage("MSG: Field changed")
-        elif (self.txt_changed[11:14].any() ):
-#            print("field changed")
-            m.set_field(params['lam'], params['E_0'], params['phi'])
-            pub.sendMessage("MSG: Field changed")
-        if self.txt_changed[3:11].any():
-#            print("beam changed")            
-            m.set_beam( int(params['N_p']), params['E_kin'],
-                            params['sx'], params['eps_x'],
-                            params['sy'], params['eps_y'],
-                            params['sz'], params['eps_z'])
-        # output freq. and phase velocity of em wave
-        self.frame.txtCtrl_omega.SetValue( "{0:2.2e}".format(m.fields.omega))
-        self.frame.txtCtrl_phVelocity.SetValue("{0:1.4f}".format(m.fields.phaseVelocity) )
-        #reset bool list for changes
-        self.txt_changed= np.zeros(len(self.short_options),dtype=bool)
-        event.GetEventObject().Enable()
+        try:
+            if ( any(self.txt_changed[:3]) ):
+    #            print("DLA changed")
+                m.set_dla(params['a'], params['b'], params['epsR'])
+                m.set_field(params['lam'], params['E_0'], params['phi'])
+                pub.sendMessage("MSG: DLA changed")
+                pub.sendMessage("MSG: Field changed")
+            elif any(self.txt_changed[11:14]):
+    #            print("field changed")
+                m.set_field(params['lam'], params['E_0'], params['phi'])
+                pub.sendMessage("MSG: Field changed")
+                print("Field parameters changed")
+            if any(self.txt_changed[3:11]):
+    #            print("beam changed")            
+                m.set_beam( int(params['N_p']), params['E_kin'],
+                                params['sx'], params['eps_x'],
+                                params['sy'], params['eps_y'],
+                                params['sz'], params['eps_z'])
+            # output freq. and phase velocity of em wave
+            self.frame.txtCtrl_omega.SetValue( "{0:2.2e}".format(m.fields.omega))
+            self.frame.txtCtrl_phVelocity.SetValue("{0:1.4f}".format(m.fields.phaseVelocity) )
+            self.frame.txtCtrlEnergySpread.SetValue( "{0:2.3e}".format(
+                self.model.beam.getMeanEnergyKin(boolStd= True)[1] )  )
+        except Exception as ex:
+            self.frame.showMsgBox("Error occured:\n"+ str(ex) + "\n"+ traceback.format_exc())
+            
+        finally:
+            #reset bool list for changes
+        #        self.txt_changed= np.zeros(len(self.short_options),dtype=bool)
+            self.txt_changed = [False]*len(self.short_options)
+            event.GetEventObject().Enable()
 
     
     def onTextChanged(self, event):
@@ -605,7 +639,7 @@ class Controller:
         numPeriods = int(self.frame.lineEditElements['num_obs'].GetValue())        
         def accelerateAndPlot(periods): 
             self.model.ellipseEvolution = self.model.beam.accelerateWithDLA(
-                    self.model.fields, 
+                    self.model.fields, numSteps = 1000,
                     numPeriods=periods, 
                     ellipseParamsAfter= 15) 
             wx.CallAfter( pub.sendMessage, "MSG: Acceleration done" )            

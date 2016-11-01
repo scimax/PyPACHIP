@@ -263,6 +263,7 @@ if __name__ =="__main__":
     plt.plot(z_range, field.E_z(r_in_a*dlaTHZ.a, z_range, 0), label=r"$E_z$" )
     plt.plot(z_range, field.E_r(r_in_a*dlaTHZ.a, z_range, 0), label=r"$E_r$" )
     plt.plot(z_range, c*field.B_phi(r_in_a*dlaTHZ.a, z_range, 0), label=r"$c B_{\phi}$" )
+    plt.legend()    
     
     plotFieldsRadially(field)        
     print("gamma1:", field.gamma_1)

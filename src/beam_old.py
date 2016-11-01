@@ -578,49 +578,49 @@ if __name__=="__main__":
                     s_tr, eps_tr/s_tr * p0 ,
                     s_z, eps_z/s_z*p0,
                     0, 0, 0, 0, 0, p0 )
-     
-    
-    print("observation time:", 2*np.pi/(omega*c) *10)    
-
-    gs1=plt.GridSpec(3,2)
-    fig= plt.figure(figsize=plt.figaspect(0.5) )
-    ax = fig.add_subplot( gs1[:,0] )
-              
-    ax= plotEDistribution(beam,  axes=ax, label="initial")
-    ellipseEvolution = beam.accelerateWithDLA(fields, numPeriods=10, ellipseParamsAfter = 15)  
-    ax= plotEDistribution(beam,  axes=ax, label="final")
-#    '''        
-    
-    gs2 = plt.GridSpec(3,2, hspace=0.18)
-#    fig, axarr = plt.subplots(4, sharex=True)
-    print(ellipseEvolution[:,1])
-    print(ellipseEvolution.shape)
-    # first shared
-    ax1 = fig.add_subplot(gs2[0,1])
-    plt.setp(ax1.get_xticklabels(), visible=False)
-    # add other shared ones
-    ax_twin1= fig.add_subplot(gs2[1,1], sharex=ax1)
-    ax_twin2= ax_twin1.twinx()
-    plt.setp(ax_twin1.get_xticklabels(), visible=False)
-#    ax_twin1.xaxis.set_ticklabels([])    
-    ax3 = fig.add_subplot(gs2[2,1], sharex=ax1)
-    ax3.set_xlabel("t [m/c]")    
-    bottom_axes = [ax1, ax_twin1, ax_twin2, ax3]
-
-    # Hide shared x-tick labels
-    for axes in bottom_axes:
-        x_pos=axes.yaxis.get_label().get_position()[0]
-        print(axes.yaxis.get_label().get_position())
-        print(axes.get_yaxis().get_offset_text().get_position())        
-        axes.get_yaxis().get_offset_text().set_x(x_pos)
-#        axes.get_yaxis().get_offset_text().set_y(-0.18)
-        axes.get_yaxis().get_offset_text().set_rotation('vertical')
-        axes.locator_params(axis='y', nbins=6)
-    
+#    ''' 
+#    
+#    print("observation time:", 2*np.pi/(omega*c) *10)    
+#
+#    gs1=plt.GridSpec(3,2)
+#    fig= plt.figure(figsize=plt.figaspect(0.5) )
+#    ax = fig.add_subplot( gs1[:,0] )
+#              
+#    ax= plotEDistribution(beam,  axes=ax, label="initial")
+#    ellipseEvolution = beam.accelerateWithDLA(fields, numPeriods=10, ellipseParamsAfter = 15)  
+#    ax= plotEDistribution(beam,  axes=ax, label="final")
+##    '''        
+#    
+#    gs2 = plt.GridSpec(3,2, hspace=0.18)
+##    fig, axarr = plt.subplots(4, sharex=True)
+#    print(ellipseEvolution[:,1])
+#    print(ellipseEvolution.shape)
+#    # first shared
+#    ax1 = fig.add_subplot(gs2[0,1])
+#    plt.setp(ax1.get_xticklabels(), visible=False)
+#    # add other shared ones
+#    ax_twin1= fig.add_subplot(gs2[1,1], sharex=ax1)
+#    ax_twin2= ax_twin1.twinx()
+#    plt.setp(ax_twin1.get_xticklabels(), visible=False)
+##    ax_twin1.xaxis.set_ticklabels([])    
+#    ax3 = fig.add_subplot(gs2[2,1], sharex=ax1)
+#    ax3.set_xlabel("t [m/c]")    
+#    bottom_axes = [ax1, ax_twin1, ax_twin2, ax3]
+#
+#    # Hide shared x-tick labels
+#    for axes in bottom_axes:
+#        x_pos=axes.yaxis.get_label().get_position()[0]
+#        print(axes.yaxis.get_label().get_position())
+#        print(axes.get_yaxis().get_offset_text().get_position())        
+#        axes.get_yaxis().get_offset_text().set_x(x_pos)
+##        axes.get_yaxis().get_offset_text().set_y(-0.18)
+#        axes.get_yaxis().get_offset_text().set_rotation('vertical')
+#        axes.locator_params(axis='y', nbins=6)
+#    
 #    bottom_axes[-1].locator_params(axis='y', nbins=6)
 
     
-    plotEllipseParams(bottom_axes, ellipseEvolution)
+#    plotEllipseParams(bottom_axes, ellipseEvolution)
     
 #    plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
 #    '''
@@ -630,7 +630,7 @@ if __name__=="__main__":
 #    ax2, pz0= plotzPz(beam, "initial")
 #    print("before: pz0= ", pz0)
 
-    '''
+#    '''
     # PLOT in longitudinal direction with field
     lamb = 2*np.pi/fields.k
     z_range =  np.linspace(0, lamb*10, 100)
@@ -643,7 +643,7 @@ if __name__=="__main__":
 
     z1_pos = beam.particles[:,4]
     plt.plot(z1_pos, np.zeros(N_p), "ro")
-    '''    
+#    '''    
     
 #    ax2, pz0 = plotzPz(beam, "final", ax2)
 #    print("after: pz0= ", pz0)    
