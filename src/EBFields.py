@@ -109,8 +109,9 @@ class EBField:
         a= self.dla.a
         b= self.dla.b
         inVac = lambda r: 1j * self.k/ self.gamma_1 * self.E_0 * jvp(0, self.gamma_1 *r)
-        inDielec = lambda r:  1j* self.k * self.amp2 / self.gamma_2 *( j0( self.gamma_2 *r)\
-        - j0(self.gamma_2 * b)/y0(self.gamma_2*b) * yvp(0, self.gamma_2 *r) )
+        inDielec = lambda r:  1j* self.k * self.amp2 / self.gamma_2 *\
+            ( jvp(0, self.gamma_2 *r)\
+            - j0(self.gamma_2 * b)/y0(self.gamma_2*b) * yvp(0, self.gamma_2 *r) )
         # make an array. requiered if argument r is not an array but a float
         r=np.reshape(r,-1)
 #        assert( (r<= b).all() )  # make sure all provided values are in the waveguide
@@ -131,6 +132,8 @@ class EBField:
         # make an array. requiered if argument r is not an array but a float
         r=np.reshape(r,-1)
 #        assert( (r<= b).all() )  # make sure all provided values are in the waveguide
+        # TODO: make more efficient
+#        np.piecewise(x, [x < 0, x >= 0], [-1, 1])
         datapointsVac = r[np.where( r< a)]
         datapointsDielec= r[np.where( r >= a)]
         radial = np.hstack((inVac(datapointsVac), inDielec(datapointsDielec) )) 

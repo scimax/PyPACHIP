@@ -125,8 +125,8 @@ class Beam:
         print("variance pz:", cov_mat[1,1])
         print(np.sqrt(cov_mat[0,0]*cov_mat[1,1] - cov_mat[0,1]**2))
         print(self.width[4]*self.width[5])
-        return np.sqrt(cov_mat[0,0]*cov_mat[1,1] - cov_mat[0,1]**2)/self.position[5]
-#        return self.width[4]*self.width[5]
+#        return np.sqrt(cov_mat[0,0]*cov_mat[1,1] - cov_mat[0,1]**2)/self.position[5]
+        return self.width[4]*self.width[5]/self.position[5]
         
     def get_alphax(self):
         pass        
