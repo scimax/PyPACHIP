@@ -143,7 +143,7 @@ class EBField:
         a= self.dla.a
         b= self.dla.b
         A_z_vac = lambda r: -1j/self.omega* self.E_0 * jv(0, self.gamma_1*r)
-        A_z_diel = lambda r: -1j/omega* self.amp2 * \
+        A_z_diel = lambda r: -1j/self.omega* self.amp2 * \
             ( \
                  jv(0, self.gamma_2 * r) - \
                  jv(0, self.gamma_2 * b)/ y0( self.gamma_2 * b) *\

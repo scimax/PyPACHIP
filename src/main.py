@@ -19,8 +19,13 @@ from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wx import NavigationToolbar2Wx
 from matplotlib.figure import Figure
 import matplotlib.animation as animation
-import matplotlib.pyplot as plt
-import matplotlib as mpl
+#import FileDialog 
+import tkinter.filedialog  # required to build the executable
+#import matplotlib.pyplot as plt
+from matplotlib.pyplot import setp
+#import matplotlib as mpl
+from matplotlib import rc
+
 import matplotlib.gridspec as gridspec
 from mpl_toolkits.mplot3d import Axes3D   #for nice plots TODO: neccessary??
 import numpy as np
@@ -171,11 +176,13 @@ class MyMplCanvas(FigureCanvas):
         gs02 = gridspec.GridSpecFromSubplotSpec(3,1, subplot_spec=gs1[1,2], hspace=0.0)
         # first shared
         ax1 = fig.add_subplot(gs02[0,0])
-        plt.setp(ax1.get_xticklabels(), visible=False)
+#        plt.setp(ax1.get_xticklabels(), visible=False)
+        setp(ax1.get_xticklabels(), visible=False)
         # add second one with twin axis
         ax_twin1= fig.add_subplot(gs02[1,0], sharex=ax1)
         ax_twin2= ax_twin1.twinx()
-        plt.setp(ax_twin1.get_xticklabels(), visible=False)
+#        plt.setp(ax_twin1.get_xticklabels(), visible=False)
+        setp(ax_twin1.get_xticklabels(), visible=False)
         # add third one 
         ax3 = fig.add_subplot(gs02[2,0], sharex=ax1)
         ax3.set_xlabel("t [m/c]")
@@ -685,9 +692,12 @@ class Controller:
 if __name__ == "__main__":
     #axes.formatter.limits : -7, 7
 #    mpl.rc("axes.formatter", limits=(-3,4))
-    mpl.rc("axes.formatter", limits=(-3,3))    
-    mpl.rc("axes.formatter", use_mathtext=True)
-    mpl.rc("legend", fontsize= 'medium')
+#    mpl.rc("axes.formatter", limits=(-3,3))    
+#    mpl.rc("axes.formatter", use_mathtext=True)
+#    mpl.rc("legend", fontsize= 'medium')
+    rc("axes.formatter", limits=(-3,3))    
+    rc("axes.formatter", use_mathtext=True)
+    rc("legend", fontsize= 'medium')
     app = wx.App(False)
     controller = Controller()
     app.MainLoop()

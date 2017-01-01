@@ -5,13 +5,12 @@ Created on Mon Feb 08 11:07:22 2016
 @author: Max
 """
 
-from numpy import *
+#from numpy import *
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.linalg import block_diag
 from scipy.constants import m_e, m_p, c, e
 from multiprocessing import pool
-import time
 
     
 #------------------------------------------------------------
@@ -78,8 +77,8 @@ class Beam:
     def __init__(self, mass=1, beta=0.5):
         # this is a list of arrays
         self.particles = []
-        self.width= ones(6)
-        self.position= zeros(6)
+        self.width= np.ones(6)
+        self.position= np.zeros(6)
         self.b0 = beta       # velocity of the reference trajectory/particle
         self.mass = mass       # in units of eV
         self.count=0
@@ -88,11 +87,11 @@ class Beam:
         return self.b0 * self.gamma0() * self.mass
     
     def gamma0(self):
-        return 1./sqrt(1-self.b0**2)  
+        return 1./np.sqrt(1-self.b0**2)  
     def get_Ekin0(self):
-        return self.mass*( 1/sqrt(1 - self.b0**2) - 1)
+        return self.mass*( 1/np.sqrt(1 - self.b0**2) - 1)
     def set_Ekin0(self,Ekin):
-        self.b0 = sqrt(2* self.mass * Ekin + Ekin**2)/(self.mass + Ekin)
+        self.b0 = np.sqrt(2* self.mass * Ekin + Ekin**2)/(self.mass + Ekin)
         
     def get_eps_x(self):
         '''
@@ -149,7 +148,7 @@ class Beam:
         '''
         listTemp= list(self.particles)
         listTemp.append(singleParticle)
-        self.particles = array(listTemp)
+        self.particles = np.array(listTemp)
         self.count = self.count +1
         # check number of particles for consistency
         if self.count != len(self.particles):
@@ -161,10 +160,10 @@ class Beam:
     def removeByMaxTransverse(self, size):
         # boolean list
         particlePasses = np.sum(self.particles[:, 0:3:2]**2, axis=1) < size**2 
-        numRemoved = self.count - sum(particlePasses)
+        numRemoved = self.count - np.sum(particlePasses)
         if numRemoved != 0:
             self.particles = self.particles[ particlePasses ]
-            self.count  = sum(particlePasses)
+            self.count  = np.sum(particlePasses)
         assert( self.count == len(self.particles))
         return numRemoved
         
@@ -183,27 +182,27 @@ class Beam:
         '''
 #        print(args)
         #default values for Gaussian parameters
-        width = ones(6, dtype=float)
-        position = zeros(6, dtype=float)
+        width = np.ones(6, dtype=float)
+        position = np.zeros(6, dtype=float)
         # If only width specified beam is located at origin
         if len(args) == 6:       
-            width = array(args)
+            width = np.array(args)
             # TODO
         elif len(args) ==12:
-            width= array(args[:6])
-            position = array(args[6:])
+            width= np.array(args[:6])
+            position = np.array(args[6:])
         else:
             raise IndexError("Invalid number of arguments when creating Gaussian beam")
         
         # just an empty array
-        particles= zeros((number, 6))
+        particles= np.zeros((number, 6))
         # roll the gaussian dice
         # 
         # random.multivariate_normal
         # One of the following lines is sufficient
         # TODO: efficiency test
 #        temp = map(random.normal, position, width, number*ones(6))
-        temp2 = random.multivariate_normal(position, diag(width)**2, number)
+        temp2 = np.random.multivariate_normal(position, np.diag(width)**2, number)
         
         # temp is a list and ordered the other way round
         self.particles = temp2
@@ -220,10 +219,10 @@ class Beam:
         '''       
         
     def plotxPx(self, boolReturnLimits = False, xlim= None, ylim= None):
-        x= array(self.particles)[:,0]
+        x= np.array(self.particles)[:,0]
         # here, y denotes px such that x,y represent the projection 
         # on the phase space in x
-        y= array(self.particles)[:,1]
+        y= np.array(self.particles)[:,1]
         plt.figure()
         plt.plot(x,y, "ro")
         xLow = self.position[0]- 2*self.width[0]
@@ -284,7 +283,7 @@ class Beam:
         '''
         
         if T_ob is None:
-            T_ob = 2*pi/(ebField.omega) *numPeriods*c
+            T_ob = 2*np.pi/(ebField.omega) *numPeriods*c
         
         def force(x,y,z, beta, t):
             '''
@@ -318,14 +317,14 @@ class Beam:
               acting on the ith particle.
             
             '''
-            if not isscalar(x):
+            if not np.isscalar(x):
                 length= len(x)
                 # x,y,z are requirecd to have same length,
                 assert((len(x) == len(y)) and (len(x) == len(z)) )
             else:
                 length=1        
-            Phi = arctan2(y,x)
-            R= sqrt(x**2 + y**2)
+            Phi = np.arctan2(y,x)
+            R= np.sqrt(x**2 + y**2)
         #    print("radius: ",R)
         #    print("angle: ",Phi)
             E_r = ebField.E_r(R,z,t)
@@ -333,8 +332,8 @@ class Beam:
             # e_r x e_phi = e_z  ---- e_z x e_phi= - e_r
             
             #charge set to be q=1
-            F_z = outer(array([0,0,1]), ebField.E_z(R,z,t) )
-            F_tr= (E_r - beta*c*B_phi)*array([cos(Phi), sin(Phi), zeros(length)])
+            F_z = np.outer(np.array([0,0,1]), ebField.E_z(R,z,t) )
+            F_tr= (E_r - beta*c*B_phi)*np.array([np.cos(Phi), np.sin(Phi), np.zeros(length)])
             # reshaping needs to be done for the case of scalar parameters
             F_tr=F_tr.reshape(F_z.shape)
             return F_z + F_tr
@@ -378,7 +377,7 @@ class Beam:
 #            F_i =   pool.map(force, )                      
             F_i = force( *position_i, self.b0, t/c)
             
-            E_half_step= sqrt( self.mass**2 + \
+            E_half_step= np.sqrt( self.mass**2 + \
                 np.linalg.norm(momentum_i + F_i * dt/2, axis=0 )**2   )
             # the energy of a particle depends on all it's three momentum coordinates
             # so when applying a leapfrog step the energy is the same for all 3 
@@ -419,7 +418,7 @@ class Beam:
         '''
         kinetic energy of the particles
         '''
-        E = sqrt( self.mass**2 + sum(self.particles[:,1::2]**2, axis=1)) - self.mass
+        E = np.sqrt( self.mass**2 + np.sum(self.particles[:,1::2]**2, axis=1)) - self.mass
         return E
         
     def getMeanEnergyKin(self, boolStd = False):
@@ -435,8 +434,8 @@ class Beam:
         Therefore kin. energy is also updated
         '''
         p_absVal_square = sum(self.particles[:,1::2]**2, axis=1)        
-        beta = sqrt(p_absVal_square/ ( self.mass**2 + p_absVal_square))
-        self.b0 = mean(beta)
+        beta = np.sqrt(p_absVal_square/ ( self.mass**2 + p_absVal_square))
+        self.b0 = np.mean(beta)
 #        sqrt()        
   
 def plotEDistribution(beam, x_scaling=1., x_scale_label="", axes=None, label=None):
@@ -477,7 +476,7 @@ def plotzPz(beam, legendLabel="", axes=None):
     z = beam.particles[:,4]
     pz = beam.particles[:,5]
     pz0 = np.mean(pz)
-    z0 = mean(z)
+    z0 = np.mean(z)
 #    print("z0=",z0)
 #    axes.set_title(r"longitudinal, $p_0={0:1.2e}$ eV, $z_0={1:1.2}$ m".format(pz0,z0))
     axes.set_title(r"longitudinal")
@@ -539,9 +538,12 @@ def plotEllipseParams(axesList, paramsArray,):
  
        
 if __name__=="__main__":
-    import matplotlib as mpl
-    mpl.rc("axes.formatter", limits=(-3,3))    
-    mpl.rc("axes.formatter", use_mathtext=True)
+#    import matplotlib as mpl
+#    mpl.rc("axes.formatter", limits=(-3,3))    
+#    mpl.rc("axes.formatter", use_mathtext=True)
+    from matplotlib import rc
+    rc("axes.formatter", limits=(-3,3))    
+    rc("axes.formatter", use_mathtext=True)
 
     beam = Beam( mass= m_p/e*c**2, )
     beam.b0= 0.5
