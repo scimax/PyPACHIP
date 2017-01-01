@@ -1,11 +1,10 @@
 # PyPACHIP
 PyPACHIP - Python Proton Accelerator on a Chip Simulation
 
-
 # Using standalone
-In this case, no python version or something similar is required. You can simply download the executable and run it.
+At the moment it is only provided for Windows OS. No python installation is required to run the executable. You can download _pypachip.exe_ from the [release page](https://github.com/scimax/PyPACHIP/releases/tag/v1.0). 
 
-# Using as python scripts
+# Developer installation guide
 When running the scripts directly, the following is required:
 - Python 3.5
 - Packages:
@@ -33,6 +32,15 @@ After downloading the files from the *src* directory, run
 ```bash
 python main.py
 ```
+
+# Build instructions
+In order to build the executable using pyinstaller, the following errors have to be solved:
+- http://stackoverflow.com/questions/35478526/pyinstaller-numpy-intel-mkl-fatal-error-cannot-load-mkl-intel-thread-dll
+- https://github.com/pyinstaller/pyinstaller/issues/1566
+
+As the second link mentions, Visual Studio was used to implement the dll files required for *numpy*.
+
+ 
 
 
 
