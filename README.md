@@ -34,11 +34,11 @@ python main.py
 ```
 
 # Build instructions
-In order to build the executable using pyinstaller, the following errors have to be solved:
+In order to build the executable using *pyinstaller*, the following errors have to be solved:
 - http://stackoverflow.com/questions/35478526/pyinstaller-numpy-intel-mkl-fatal-error-cannot-load-mkl-intel-thread-dll
 - https://github.com/pyinstaller/pyinstaller/issues/1566
 
-As the second link mentions, Visual Studio was used to implement the dll files required for *numpy*.
+As the second link mentions, Visual Studio 2015 was used to implement the dll files required for *numpy*.
 
  
 
